@@ -1,8 +1,8 @@
 # HUD Trackers
 
-EXP/hr, time to level and zuly tracker on the HUD EXP bar; HUD weapon durability refresh.
+EXP/hr and time to level on the HUD EXP bar; HUD weapon durability refresh.
 
-Hover the EXP bar for EXP per hour, time to the next level, this session's EXP and zuly gained or spent. Double-click the EXP bar to start a new session. Also keeps the HUD weapon slot's durability up to date.
+Hover the EXP bar for EXP per hour, time to the next level and this session's EXP. Double-click the EXP bar to start a new session. Also keeps the HUD weapon slot's durability up to date.
 
 An add-on for [ROSE Mod Launcher](https://github.com/Zurnny/Rose_Mod_Launcher), for the game's **default** UI. The [Steampunk UI](https://github.com/Zurnny/SteamPunk) theme already includes this, so you don't need it with Steampunk (if both are on, Steampunk's files win).
 

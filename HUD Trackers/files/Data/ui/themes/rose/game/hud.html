@@ -161,7 +161,7 @@
 			bottom: 50dp;
 			}
 
-			/* ---- HUD Trackers add-on: EXP / zuly tooltip, weapon refresh timer ---- */
+			/* ---- HUD Trackers add-on: EXP tooltip, weapon refresh timer ---- */
 			#sp-exp-wrap { position: relative; }
 			.sp-tip {
 			visibility: hidden; position: absolute; z-index: 100; left: 0dp; top: 100%; margin-top: 4dp;
@@ -169,6 +169,7 @@
 			color: white; font-size: 12dp; line-height: 16dp; font-weight: 600; text-align: left; pointer-events: none;
 			}
 			#sp-exp-wrap:hover .sp-tip { visibility: visible; }
+			#sp-exp-cover { position: absolute; left: 0dp; top: 0dp; right: 0dp; bottom: 0dp; z-index: 10; }
 			.sp-tip-title { display: block; color: yellow; font-weight: 800; margin-bottom: 2dp; }
 			.sp-tip-title.second { margin-top: 6dp; }
 			.sp-tip-row { display: block; }
@@ -181,9 +182,9 @@
 		</style>
 		<script>
 -- Session trackers (HUD Trackers add-on).
--- Every 5 seconds this notes your EXP and zuly. Hovering the EXP bar shows EXP
--- per hour (over the last 10 minutes), time to the next level, what this
--- session has earned, and zuly gained or spent this session and per hour.
+-- Every 5 seconds this notes your EXP. Hovering the EXP bar shows EXP per hour
+-- (over the last 10 minutes), time to the next level and what this session
+-- has earned.
 -- Double-click the EXP bar to start a new session. A new
 -- character starts a new session by itself. Text only changes while you hover,
 -- so nothing is redrawn in the background.
@@ -264,22 +265,14 @@ pcall(function()
         end
         set('sp-xp-session', 'This session: +' .. num(math.max(0, S.xp)) .. ' (' .. span(S.ticks * STEP) .. ')')
     end
-    local function show_zuly()
-        if not S then return end
-        local diff = S.money - S.money0
-        set('sp-zuly-session', (diff >= 0 and 'Gained: +' or 'Spent: ') .. num(diff) .. ' z')
-        local _, zph = rates()
-        set('sp-zuly-rate', zph and ('Per hour: ' .. (zph >= 0 and '+' or '') .. num(zph) .. ' z') or 'Per hour: gathering data...')
-        set('sp-zuly-time', 'Session length: ' .. span(S.ticks * STEP))
-    end
     -- hover handlers
     local wrap = el('sp-exp-wrap')
     if wrap then
-        wrap:AddEventListener('mouseover', function() pcall(show_xp); pcall(show_zuly) end)
+        wrap:AddEventListener('mouseover', function() pcall(show_xp) end)
         wrap:AddEventListener('dblclick', function()
             local v = read()
             if v then S = fresh(v) end
-            pcall(show_xp); pcall(show_zuly)
+            pcall(show_xp)
         end)
     end
     local timer = el('sp-track-timer')
@@ -360,16 +353,14 @@ end)
 								<label id="percent" />%
 							</span>
 						</gauge>
+						<!-- Covers the bar so the game's own small EXP tooltip doesn't open as well -->
+						<div id="sp-exp-cover"></div>
 						<div class="sp-tip">
 							<span class="sp-tip-title">Experience</span>
 							<span class="sp-tip-row">{{experience}} / {{max_experience}}</span>
 							<span class="sp-tip-row" id="sp-xp-rate">Per hour: gathering data...</span>
 							<span class="sp-tip-row" id="sp-xp-eta"></span>
 							<span class="sp-tip-row" id="sp-xp-session"></span>
-							<span class="sp-tip-title second">Zuly this session</span>
-							<span class="sp-tip-row" id="sp-zuly-session">Gathering data...</span>
-							<span class="sp-tip-row" id="sp-zuly-rate"></span>
-							<span class="sp-tip-row" id="sp-zuly-time"></span>
 							<span class="sp-tip-note">Double-click the EXP bar to start a new session.</span>
 						</div>
 						</div>

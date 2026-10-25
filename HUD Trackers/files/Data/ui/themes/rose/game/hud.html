@@ -323,18 +323,21 @@ pcall(function()
 end)
 		</script>
     <script>
--- Add-on switch: turned on and off in Options > UI > Add-ons (Options Extras),
+-- Add-on switch: turned on and off in Options > UI > Add-ons (Options Extras).
 -- SP_ADDON_SWITCH exp_tracker
 -- SP_ADDON_SWITCH weapon_refresh
--- saved in sp_addons.txt. Everything is on until it is switched off there.
+-- When this window loads it lists itself in sp_addons_list.txt, which is how
+-- Options knows to show its switch. The switch itself is saved in
+-- sp_addons.txt; this window reads it fresh every 2 seconds, so a change in
+-- Options shows here within about 2 seconds. Everything is on by default.
 pcall(function()
-    -- Reads sp_addons.txt fresh each time (it is tiny), so a switch flipped in
-    -- Options takes effect here within about 2 seconds, even though each game
-    -- window runs its scripts on its own.
+    local LIST, FLAGS = 'sp_addons_list.txt', 'sp_addons.txt'
+    -- key, class put on this window while it is switched off ('' = none), switch text, add-on
+    local MINE = {{'exp_tracker', 'sp-exp-off', 'EXP per hour on the EXP bar', 'HUD Trackers'}, {'weapon_refresh', '', 'Keep the HUD weapon durability up to date', 'HUD Trackers'}}
     SP_ADDON_ON = function(key)
         local on = true
         pcall(function()
-            local f = io.open('sp_addons.txt', 'r')
+            local f = io.open(FLAGS, 'r')
             if not f then return end
             for line in f:lines() do
                 local k, v = line:match('^%s*([%w_]+)%s*=%s*(%d)')
@@ -344,24 +347,40 @@ pcall(function()
         end)
         return on
     end
+    -- list myself (key|switch text|add-on), keeping everyone else's lines
+    pcall(function()
+        local lines, have, changed = {}, {}, false
+        local f = io.open(LIST, 'r')
+        if f then
+            for line in f:lines() do
+                local k = line:match('^([%w_]+)|')
+                if k then lines[#lines + 1] = line; have[k] = line end
+            end
+            f:close()
+        end
+        for _, m in ipairs(MINE) do
+            local want = m[1] .. '|' .. m[3] .. '|' .. m[4]
+            if have[m[1]] ~= want then
+                changed = true
+                local put = false
+                for i, line in ipairs(lines) do
+                    if line:match('^([%w_]+)|') == m[1] then lines[i] = want; put = true end
+                end
+                if not put then lines[#lines + 1] = want end
+            end
+        end
+        if changed then
+            local w = io.open(LIST, 'w')
+            if w then w:write(table.concat(lines, '\n'), '\n'); w:close() end
+        end
+    end)
     local doc = document
-    local PAIRS = {{'exp_tracker', 'sp-exp-off'}}
     local function apply()
-        for _, pair in ipairs(PAIRS) do
-            pcall(function() doc:SetClass(pair[2], not SP_ADDON_ON(pair[1])) end)
+        for _, m in ipairs(MINE) do
+            if m[2] ~= '' then pcall(function() doc:SetClass(m[2], not SP_ADDON_ON(m[1])) end) end
         end
     end
     apply()
-    -- let Options apply it straight away when windows can share (otherwise the timer does it)
-    pcall(function()
-        local G = _G
-        if type(G) ~= 'table' then return end
-        G.SP_ADDON_APPLY = G.SP_ADDON_APPLY or {}
-        for _, pair in ipairs(PAIRS) do
-            G.SP_ADDON_APPLY[pair[1]] = G.SP_ADDON_APPLY[pair[1]] or {}
-            table.insert(G.SP_ADDON_APPLY[pair[1]], apply)
-        end
-    end)
     doc:AddEventListener('show', function() pcall(apply) end)
     -- repeating 2 second check: two identical animations swapped each time one ends
     pcall(function()

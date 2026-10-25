@@ -1,0 +1,441 @@
+<rml>
+
+	<head>
+		<title></title>
+		<link type="text/template" href="../templates/window-box.html" />
+		<link type="text/template" href="../templates/elements/gauge.html" />
+		<link type="text/rcss" href="../styles/spritesheet_itemicon.css" />
+		<link type="text/rcss" href="../styles/spritesheet_socketgem.css" />
+		<link type="text/rcss" href="../styles/spritesheet_elementicon.css" />
+		<link type="text/rcss" href="../styles/item_slot.css" />
+		<link type="text/rcss" href="../styles/spritesheet_inventory.css" />
+		<link type="text/rcss" href="../styles/components.css" />
+
+		<style>
+			body {
+			margin: 5dp;
+			}
+
+			.window-title {
+			font-size: 12dp;
+			}
+
+			#window-title-text {
+			display: block;
+			height: 20dp;
+			line-height: 20dp;
+			padding-top: 1dp;
+			}
+
+			.window-fixed-size {
+			padding-top: 20dp;
+			width: 250dp;
+			}
+
+			#state-icon-container { margin-top: 5dp; width: 195dp; }
+			.hud-status-row { display: flex; flex-wrap: wrap; }
+			.hud-status-icon { display: inline-block; width: 20dp; height: 20dp; margin: 0 1dp 1dp 0; flex-shrink: 0; }
+			.hud-status-icon img { width: 20dp; height: 20dp; pointer-events: none; }
+			.hud-status-icon.blink { opacity: 0.25; }
+			.hud-status-icon.inactive img { image-color: rgb(255, 0, 0); }
+			.hud-status-icon.warning img { image-color: rgb(255, 180, 180); }
+
+			#window-content.content {
+			padding: 1dp 2dp 1dp 1dp;
+			display: flex;
+			flex-direction: column;
+			}
+
+			span.marker {
+			position: absolute;
+			}
+
+			div.footer {
+			flex: 2;
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			margin: 2dp 2dp 0 2dp;
+			font-size: 12dp;
+			}
+
+			div.footer>span.left {
+			flex-grow: 1;
+			text-align: left;
+			font-weight: 800;
+			}
+
+			div.footer>span.right {
+			flex-grow: 1;
+			text-align: right;
+			}
+
+			#zulie {
+			font-weight: 800;
+			}
+
+			b.money,
+			span.level {
+			color: yellow;
+			}
+
+			@keyframes low {
+			from {
+			color: red;
+			}
+
+			to {
+			color: white;
+			}
+			}
+
+			gauge.low-value-animation {
+			animation: 1.5s cubic-in-out infinite alternate low;
+			}
+
+			#exp {
+			position: relative;
+			height: 13dp;
+			}
+
+			#exp > span.exp-text {
+			position: absolute;
+			left: 0dp;
+			top: 0dp;
+			width: 100%;
+			height: 13dp;
+			line-height: 13dp;
+			text-align: center;
+			font-size: 12dp;
+			pointer-events: none;
+			}
+
+			div.container {
+			flex: 2;
+			display: flex;
+			}
+
+			div.hud {
+			width: 195dp;
+			}
+
+			div.pat-fuel {
+			display: flex;
+			height: 100%;
+			flex-direction: column;
+			justify-content: flex-end;
+			margin-left: 5dp;
+			}
+
+			div.weapon-slot {
+			position: absolute;
+			left: 200dp;
+			top: 32dp;
+			width: 42dp;
+			height: 42dp;
+			}
+
+			div.weapon-slot > img {
+			position: absolute;
+			left: -3dp;
+			top: -4dp;
+			width: 50dp;
+			height: 50dp;
+			pointer-events: none;
+			}
+
+			div.weapon-slot item-slot {
+			position: absolute;
+			left: -4dp;
+			top: -4dp;
+			width: 50dp;
+			height: 50dp;
+			}
+
+			.tooltip .tooltiptext {
+			background: rgba(0, 0, 0, 200);
+			min-width: 50dp;
+			width: 80dp;
+			left: 100%;
+			bottom: 50dp;
+			}
+
+			/* ---- HUD Trackers add-on: EXP / zuly tooltip, weapon refresh timer ---- */
+			#sp-exp-wrap { position: relative; }
+			.sp-tip {
+			visibility: hidden; position: absolute; z-index: 100; left: 0dp; top: 100%; margin-top: 4dp;
+			width: 210dp; padding: 6dp 8dp; background: rgba(0, 0, 0, 220); border: 1dp rgb(150, 150, 150); border-radius: 3dp;
+			color: white; font-size: 12dp; line-height: 16dp; font-weight: 600; text-align: left; pointer-events: none;
+			}
+			#sp-exp-wrap:hover .sp-tip { visibility: visible; }
+			.sp-tip-title { display: block; color: yellow; font-weight: 800; margin-bottom: 2dp; }
+			.sp-tip-title.second { margin-top: 6dp; }
+			.sp-tip-row { display: block; }
+			.sp-tip-warn { display: block; color: rgb(255, 120, 100); }
+			.sp-tip-note { display: block; color: rgb(180, 180, 180); font-size: 11dp; line-height: 15dp; }
+			#sp-track, #sp-weapon-src { display: none; }
+			@keyframes sp-track-tick-a { from { opacity: 0; } to { opacity: 0; } }
+			@keyframes sp-track-tick-b { from { opacity: 0; } to { opacity: 0; } }
+			#sp-track-timer { position: absolute; width: 1dp; height: 1dp; opacity: 0; animation: 5s sp-track-tick-a; }
+		</style>
+		<script>
+-- Session trackers (HUD Trackers add-on).
+-- Every 5 seconds this notes your EXP and zuly. Hovering the EXP bar shows EXP
+-- per hour (over the last 10 minutes), time to the next level, what this
+-- session has earned, and zuly gained or spent this session and per hour.
+-- Double-click the EXP bar to start a new session. A new
+-- character starts a new session by itself. Text only changes while you hover,
+-- so nothing is redrawn in the background.
+pcall(function()
+    local document = document
+    local function el(id) return document:GetElementById(id) end
+    local STEP, WINDOW = 5, 120          -- seconds per sample, samples kept (10 min)
+    local function num(n)
+        local neg = n < 0
+        local t = string.format('%.0f', math.abs(n))
+        t = t:reverse():gsub('(%d%d%d)', '%1,'):reverse():gsub('^,', '')
+        return (neg and '-' or '') .. t
+    end
+    local function span(secs)
+        secs = math.floor(secs + 0.5)
+        local h, m = math.floor(secs / 3600), math.floor((secs % 3600) / 60)
+        if h >= 100 then return 'over 100h' end
+        if h > 0 then return h .. 'h ' .. m .. 'm' end
+        if m > 0 then return m .. 'm' end
+        return secs .. 's'
+    end
+    local S = nil   -- the session
+    local function fresh(v)
+        return {name = v.name, ticks = 0, xp = 0, lv = v.lv, exp = v.exp, max = v.max,
+                money0 = v.money, money = v.money, hist = {{0, 0, v.money}}}
+    end
+    local function read()
+        local src = el('sp-track')
+        if not src then return nil end
+        local v = {name = src:GetAttribute('sp-name') or '', lv = tonumber(src:GetAttribute('sp-lv')),
+                   exp = tonumber(src:GetAttribute('sp-exp')), max = tonumber(src:GetAttribute('sp-max')),
+                   money = tonumber(src:GetAttribute('sp-money'))}
+        if not v.lv or not v.exp or not v.max or not v.money or v.name == '' then return nil end
+        return v
+    end
+    local function tick()
+        local v = read()
+        if not v then return end
+        if not S or S.name ~= v.name then S = fresh(v); return end
+        -- experience gained since the last sample, counting level-ups
+        local gain
+        if v.lv > S.lv then
+            gain = math.max(0, S.max - S.exp) + v.exp
+        elseif v.lv == S.lv then
+            gain = v.exp - S.exp
+        else
+            gain = 0
+        end
+        S.xp = S.xp + gain
+        S.lv, S.exp, S.max, S.money = v.lv, v.exp, v.max, v.money
+        S.ticks = S.ticks + 1
+        table.insert(S.hist, {S.ticks, S.xp, v.money})
+        if #S.hist > WINDOW + 1 then table.remove(S.hist, 1) end
+    end
+    local function rates()
+        local a, b = S.hist[1], S.hist[#S.hist]
+        local secs = (b[1] - a[1]) * STEP
+        if secs < 60 then return nil end
+        return (b[2] - a[2]) * 3600 / secs, (b[3] - a[3]) * 3600 / secs
+    end
+    local function set(id, text)
+        local e = el(id)
+        if e then e.inner_rml = text end
+    end
+    local function show_xp()
+        if not S then return end
+        local xph = rates()
+        if not xph then
+            set('sp-xp-rate', 'Per hour: gathering data...')
+            set('sp-xp-eta', '')
+        else
+            set('sp-xp-rate', 'Per hour: ' .. num(math.max(0, xph)))
+            if xph > 0 and S.max > 0 then
+                set('sp-xp-eta', 'Next level in: ' .. span((S.max - S.exp) * 3600 / xph))
+            else
+                set('sp-xp-eta', 'Next level in: -')
+            end
+        end
+        set('sp-xp-session', 'This session: +' .. num(math.max(0, S.xp)) .. ' (' .. span(S.ticks * STEP) .. ')')
+    end
+    local function show_zuly()
+        if not S then return end
+        local diff = S.money - S.money0
+        set('sp-zuly-session', (diff >= 0 and 'Gained: +' or 'Spent: ') .. num(diff) .. ' z')
+        local _, zph = rates()
+        set('sp-zuly-rate', zph and ('Per hour: ' .. (zph >= 0 and '+' or '') .. num(zph) .. ' z') or 'Per hour: gathering data...')
+        set('sp-zuly-time', 'Session length: ' .. span(S.ticks * STEP))
+    end
+    -- hover handlers
+    local wrap = el('sp-exp-wrap')
+    if wrap then
+        wrap:AddEventListener('mouseover', function() pcall(show_xp); pcall(show_zuly) end)
+        wrap:AddEventListener('dblclick', function()
+            local v = read()
+            if v then S = fresh(v) end
+            pcall(show_xp); pcall(show_zuly)
+        end)
+    end
+    local timer = el('sp-track-timer')
+    local flip = false
+    if timer then
+        timer:AddEventListener('animationend', function()
+            pcall(tick)
+            flip = not flip
+            timer.style.animation = STEP .. 's ' .. (flip and 'sp-track-tick-b' or 'sp-track-tick-a')
+        end)
+    end
+end)
+		</script>
+		<script>
+-- Weapon durability refresh (HUD Trackers add-on). The HUD's weapon slot only
+-- reads the weapon's details when the weapon changes, so durability and life
+-- lost in a fight didn't show (13/13 in the HUD, 12/13 in the inventory).
+-- Every 5 seconds this compares the live numbers; when they change it sets the
+-- slot's own values again so the slot reloads. Nothing else is touched.
+pcall(function()
+    local document = document
+    local last = nil
+    local function el(id) return document:GetElementById(id) end
+    local function check()
+        local src, slot = el('sp-weapon-src'), el('sp-weapon-slot')
+        if not src or not slot then return end
+        local key = src:GetAttribute('sp-key') or ''
+        local dur = src:GetAttribute('sp-dur') or ''
+        local life = src:GetAttribute('sp-life') or ''
+        local now = key .. '|' .. dur .. '|' .. life
+        if last and now ~= last and key == last:match('^([^|]*)') and key ~= '' and key ~= '0' then
+            slot:SetAttribute('item-durability', dur)
+            slot:SetAttribute('item-life', life)
+            slot:SetAttribute('item-key', '0')
+            slot:SetAttribute('item-key', key)
+        end
+        last = now
+    end
+    local timer = el('sp-track-timer')
+    if timer then
+        timer:AddEventListener('animationend', function() pcall(check) end)
+    end
+end)
+		</script>
+	</head>
+
+	<body id="hud" onclick="self-target">
+		<handle data-model="character" class="window-title" style="cursor: default" id="window-title-text">{{name}}</handle>
+		<div class="container">
+			<div class="hud" data-model="character">
+				<div class="window-fixed-size">
+					<div id="window-content" class="content">
+						<!-- HP Gauge -->
+						<gauge id="health" class="horizontal-lg-lg red"
+							data-class-low-value-animation="health_percent &lt;= 20"
+							data-attr-gvalue="health"
+							data-attr-gmax="max_health">
+							<template src="gauge-info-vmp" />
+						</gauge>
+
+						<!-- MP Gauge -->
+						<gauge id="mana" class="horizontal-lg-lg blue"
+							data-class-low-value-animation="mana_percent &lt;= 20"
+							data-attr-gvalue="mana"
+							data-attr-gmax="max_mana">
+							<template src="gauge-info-vmp" />
+						</gauge>
+
+						<!-- Exp Gauge (wrapped for the HUD Trackers tooltip) -->
+						<span id="sp-track" data-attr-sp-name="name" data-attr-sp-lv="level" data-attr-sp-exp="experience" data-attr-sp-max="max_experience" data-attr-sp-money="money"></span>
+						<div id="sp-exp-wrap">
+						<gauge id="exp" class="horizontal-sm-lg yellow" data-attr-gvalue="experience"
+							data-attr-gmax="max_experience">
+							<span class="marker">
+								<img sprite="gauge-bg-sm-lg-markers" />
+							</span>
+							<span class="exp-text">
+								<label id="percent" />%
+							</span>
+						</gauge>
+						<div class="sp-tip">
+							<span class="sp-tip-title">Experience</span>
+							<span class="sp-tip-row">{{experience}} / {{max_experience}}</span>
+							<span class="sp-tip-row" id="sp-xp-rate">Per hour: gathering data...</span>
+							<span class="sp-tip-row" id="sp-xp-eta"></span>
+							<span class="sp-tip-row" id="sp-xp-session"></span>
+							<span class="sp-tip-title second">Zuly this session</span>
+							<span class="sp-tip-row" id="sp-zuly-session">Gathering data...</span>
+							<span class="sp-tip-row" id="sp-zuly-rate"></span>
+							<span class="sp-tip-row" id="sp-zuly-time"></span>
+							<span class="sp-tip-note">Double-click the EXP bar to start a new session.</span>
+						</div>
+						</div>
+					</div>
+					<!--This handle is added so you can click the footer of the hud and move the hud around-->
+					<handle move_target="#document">
+						<div class="footer">
+							<span class="left">
+								<span class="level">{{level}} </span>
+								<span class="job">
+									<str data-attr-job-name="job">Visitor</str>
+								</span>
+							</span>
+							<span class="right">
+								<str string-id="107">Weight</str>: <b class="weight">{{weight_percent}}%</b>
+							</span>
+						</div>
+					</handle>
+				</div>
+			</div>
+
+			<!-- Weapon / ammo slot -->
+			<div class="weapon-slot" data-model="inventory">
+				<span id="sp-weapon-src" data-attr-sp-key="equipped_weapon.key" data-attr-sp-dur="equipped_weapon.durability" data-attr-sp-life="equipped_weapon.life"></span>
+				<img sprite="GEN_INVSLOT08"
+					data-if="equipped_weapon.id == 0 &amp;&amp; equipped_shot_item.id == 0" />
+
+				<item-slot id="sp-weapon-slot" data-if="equipped_shot_item.id == 0"
+					data-attr-item-key="equipped_weapon.key"
+					data-attr-item-id="equipped_weapon.id"
+					data-attr-item-type="equipped_weapon.type"
+					data-attr-item-quantity="equipped_weapon.quantity"
+					data-attr-item-refine-grade="equipped_weapon.refine_grade"
+					data-attr-item-life="equipped_weapon.life"
+					data-attr-item-durability="equipped_weapon.durability"
+					data-attr-item-appraisal="equipped_weapon.appraisal_no"
+					data-attr-item-refine-color="equipped_weapon.refine_color" />
+
+				<item-slot data-if="equipped_shot_item.id != 0"
+					data-attr-item-key="equipped_shot_item.key"
+					data-attr-item-id="equipped_shot_item.id"
+					data-attr-item-type="equipped_shot_item.type"
+					data-attr-item-quantity="equipped_shot_item.quantity" />
+			</div>
+
+			<!-- PAT Fuel -->
+			<div onclick="ignore" data-model="pat">
+				<div class="pat-fuel">
+					<gauge data-if="show" id="fuel" class="horizontal-sm-md green" data-attr-gvalue="fuel"
+						data-attr-gmax="max_fuel">
+						<span>
+							<label id="percent" />%
+						</span>
+					</gauge>
+				</div>
+			</div>
+		</div>
+
+		<!-- State Icons -->
+		<div id="state-icon-container" onclick="ignore" data-model="hud-statuses">
+			<div class="hud-status-row" data-for="group : groups" data-if="group.statuses.size > 0">
+				<span class="hud-status-icon" data-for="status : group.statuses" data-class-blink="status.blink" data-class-inactive="!status.active" data-class-warning="status.is_warning" data-attr-hud-status="status.index">
+					<img data-attr-sprite="status.sprite"/>
+				</span>
+			</div>
+		</div>
+		<div id="sp-track-timer"></div>
+	</body>
+</rml>

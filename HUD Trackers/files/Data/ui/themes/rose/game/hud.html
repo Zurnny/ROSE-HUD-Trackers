@@ -162,9 +162,9 @@
 			}
 
 			/* ---- HUD Trackers add-on: EXP tooltip, weapon refresh timer ---- */
-			#sp-exp-wrap { position: relative; }
-			/* the wrapper must not add space under the bar: line the bar up with the top of its line */
-			#sp-exp-wrap > gauge { vertical-align: top; }
+			/* A flex box takes exactly the bar's height (an ordinary box left a text line's
+			   worth of space under the bar). The tooltip and cover are placed on top of it. */
+			#sp-exp-wrap { position: relative; display: flex; flex-direction: column; }
 			.sp-tip {
 			visibility: hidden; position: absolute; z-index: 100; left: 0dp; top: 100%; margin-top: 4dp;
 			width: 210dp; padding: 6dp 8dp; background: rgba(0, 0, 0, 220); border: 1dp rgb(150, 150, 150); border-radius: 3dp;

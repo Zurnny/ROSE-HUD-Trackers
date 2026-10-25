@@ -1,4 +1,4 @@
 ; Update list for HUD Trackers. Upload this next to mod.ini and the files folder.
-version=1.6
-507b2570e4de5ed1baf7b30ed1103e4208c5dcfe|mod.ini
-fa946459ae4be479c761458bbf4cfed241f78a63|files/Data/ui/themes/rose/game/hud.html
+version=1.7
+68a1f8a8ba9c64de453edb811d604c18d0659ec2|mod.ini
+7839f43ab72d0a0906ac6acbc77032b9cc518243|files/Data/ui/themes/rose/game/hud.html

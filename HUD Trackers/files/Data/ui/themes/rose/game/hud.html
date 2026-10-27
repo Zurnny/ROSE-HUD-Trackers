@@ -27,6 +27,8 @@
             .hud-status-icon.inactive img { image-color: rgb(255, 0, 0); }
             .hud-status-icon.warning img { image-color: rgb(255, 180, 180); }
             gauge.low-value-animation { animation: 1.5s cubic-in-out infinite alternate low; }
+            .sp-wslot { display: none; }
+            #hud .sp-move { pointer-events: none; }
             #sp-exp-wrap { position: relative; display: flex; flex-direction: column; }
             #sp-exp-wrap:hover .sp-tip { visibility: visible; }
             #sp-exp-cover { position: absolute; left: 0dp; top: 0dp; right: 0dp; bottom: 0dp; z-index: 10; }
@@ -42,25 +44,29 @@
 
             /* ==== Default UI look only ==== */
             .sp-theme-default .window-title { font-size: 12dp; }
-            .sp-theme-default #window-title-text { display: block; height: 20dp; line-height: 20dp; padding-top: 1dp; }
-            .sp-theme-default .window-fixed-size { padding-top: 20dp; width: 250dp; }
+            .sp-theme-default #window-title-text { padding-top: 2dp; }
+            .sp-theme-default .window-fixed-size { padding-top: 20dp; }
             .sp-theme-default #state-icon-container { margin-top: 5dp; width: 195dp; }
             .sp-theme-default #window-content.content { padding: 1dp 2dp 1dp 1dp; display: flex; flex-direction: column; }
             .sp-theme-default span.marker { position: absolute; }
             .sp-theme-default div.footer { flex: 2; display: flex; flex-direction: row; justify-content: center; align-items: center; margin: 2dp 2dp 0 2dp; font-size: 12dp; }
             .sp-theme-default div.footer>span.left { flex-grow: 1; text-align: left; font-weight: 800; }
             .sp-theme-default div.footer>span.right { flex-grow: 1; text-align: right; }
-            .sp-theme-default #zulie { font-weight: 800; }
-            .sp-theme-default b.money { color: yellow; }
+            .sp-theme-default b.weight { color: yellow; }
             .sp-theme-default span.level { color: yellow; }
-            .sp-theme-default #exp { position: relative; height: 13dp; }
-            .sp-theme-default #exp > span.exp-text { position: absolute; left: 0dp; top: 0dp; width: 100%; height: 13dp; line-height: 13dp; text-align: center; font-size: 12dp; pointer-events: none; }
+            #hud.sp-theme-default.sp-on-ui_fixes #exp { position: relative; height: 13dp; }
+            #hud.sp-theme-default.sp-on-ui_fixes #exp > span.exp-text { position: absolute; left: 0dp; top: 0dp; width: 100%; height: 13dp; line-height: 13dp; text-align: center; font-size: 12dp; pointer-events: none; }
             .sp-theme-default div.container { flex: 2; display: flex; }
             .sp-theme-default div.hud { width: 195dp; }
             .sp-theme-default div.pat-fuel { display: flex; height: 100%; flex-direction: column; justify-content: flex-end; margin-left: 5dp; }
-            .sp-theme-default div.weapon-slot { position: absolute; left: 200dp; top: 32dp; width: 42dp; height: 42dp; }
-            .sp-theme-default div.weapon-slot > img { position: absolute; left: -3dp; top: -4dp; width: 50dp; height: 50dp; pointer-events: none; }
-            .sp-theme-default div.weapon-slot item-slot { position: absolute; left: -4dp; top: -4dp; width: 50dp; height: 50dp; }
+            .sp-theme-default .fuel-container { height: 100%; }
+            #hud.sp-theme-default.sp-on-weapon_slot .sp-wslot { display: block; }
+            #hud.sp-theme-default.sp-on-weapon_slot #window-title-text { display: block; height: 20dp; line-height: 20dp; padding-top: 1dp; }
+            #hud.sp-theme-default.sp-on-weapon_slot .window-fixed-size { width: 250dp; }
+            #hud.sp-theme-default.sp-on-weapon_slot div.weapon-slot { position: absolute; left: 200dp; top: 32dp; width: 42dp; height: 42dp; }
+            #hud.sp-theme-default.sp-on-weapon_slot div.weapon-slot > img { position: absolute; left: -3dp; top: -4dp; width: 50dp; height: 50dp; pointer-events: none; }
+            #hud.sp-theme-default.sp-on-weapon_slot div.weapon-slot item-slot { position: absolute; left: -4dp; top: -4dp; width: 50dp; height: 50dp; }
+            #hud.sp-theme-default.sp-on-hud_move .sp-move { pointer-events: auto; }
             .sp-theme-default .tooltip .tooltiptext { background: rgba(0, 0, 0, 200); min-width: 50dp; width: 80dp; left: 100%; bottom: 50dp; }
             .sp-theme-default .sp-tip { visibility: hidden; position: absolute; z-index: 100; left: 0dp; top: 100%; margin-top: 4dp; width: 210dp; padding: 6dp 8dp; background: rgba(0, 0, 0, 220); border: 1dp rgb(150, 150, 150); border-radius: 3dp; color: white; font-size: 12dp; line-height: 16dp; font-weight: 600; text-align: left; pointer-events: none; }
             .sp-theme-default .sp-tip-title { display: block; color: yellow; font-weight: 800; margin-bottom: 2dp; }
@@ -432,9 +438,27 @@ pcall(function()
 end)
 		</script>
     <script>
+-- HUD Weapon Slot, Movable HUD and Default UI Fixes: the switch script below
+-- calls these with on = installed and switched on; they put sp-on-<key> on
+-- the HUD, which turns that add-on's styles on.
+pcall(function()
+    local doc = document
+    SP_ADDON_HOOK = SP_ADDON_HOOK or {}
+    for _, k in ipairs({'weapon_slot', 'hud_move', 'ui_fixes'}) do
+        SP_ADDON_HOOK[k .. '@hud'] = function(on)
+            local b = doc:GetElementById('hud')
+            if b then b:SetClass('sp-on-' .. k, on) end
+        end
+    end
+end)
+    </script>
+    <script>
 -- Add-on switches (the same script in every add-on window).
 -- SP_ADDON_SWITCH exp_tracker
 -- SP_ADDON_SWITCH weapon_refresh
+-- SP_ADDON_SWITCH weapon_slot
+-- SP_ADDON_SWITCH hud_move
+-- SP_ADDON_SWITCH ui_fixes
 -- An add-on counts as installed while its marker file
 -- Data/ui/sp_addons/<key>.txt exists. The launcher copies the marker in with
 -- the add-on and takes it out again with it, so a window that several add-ons
@@ -445,7 +469,7 @@ end)
 pcall(function()
     local BODY = 'hud'
     -- key, class put on this window while that add-on is off or not installed ('' = none)
-    local MINE = {{'exp_tracker', 'sp-exp-off'}, {'weapon_refresh', ''}}
+    local MINE = {{'exp_tracker', 'sp-exp-off'}, {'weapon_refresh', ''}, {'weapon_slot', ''}, {'hud_move', ''}, {'ui_fixes', ''}}
     local installed = {}
     SP_ADDON_INSTALLED = function(key)
         -- the Steampunk UI theme has every add-on built in
@@ -554,8 +578,8 @@ end)
 						</div>
 						</div>
 					</div>
-					<!--This handle is added so you can click the footer of the hud and move the hud around-->
-					<handle move_target="#document">
+					<!-- Movable HUD add-on: hold the footer to move the HUD (does nothing while that add-on isn't installed) -->
+					<handle class="sp-move" move_target="#document">
 						<div class="footer">
 							<span class="left">
 								<span class="level">{{level}} </span>
@@ -571,8 +595,8 @@ end)
 				</div>
 			</div>
 
-			<!-- Weapon / ammo slot -->
-			<div class="weapon-slot" data-model="inventory">
+			<!-- HUD Weapon Slot add-on: weapon / ammo slot (hidden while that add-on isn't installed) -->
+			<div class="weapon-slot sp-wslot" data-model="inventory">
 				<span id="sp-weapon-src" data-attr-sp-key="equipped_weapon.key" data-attr-sp-dur="equipped_weapon.durability" data-attr-sp-life="equipped_weapon.life"></span>
 				<img sprite="GEN_INVSLOT08"
 					data-if="equipped_weapon.id == 0 &amp;&amp; equipped_shot_item.id == 0" />

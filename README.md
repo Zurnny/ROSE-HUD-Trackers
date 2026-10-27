@@ -34,5 +34,6 @@ theme uses the same file; both keep each other's settings.
 - `Data/ui/themes/rose/styles/sp_addons_steampunk_sprites.css` (Steampunk look, shared by the add-ons)
 - `Data/ui/sp_addons/exp_tracker.txt` (marker)
 - `Data/ui/sp_addons/weapon_refresh.txt` (marker)
+- `Data/ui/sp_addons/weapon_slot.txt` (marker)
 
 Turning it off in the launcher puts the game's own files back.

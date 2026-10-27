@@ -1,4 +1,7 @@
 ; Update list for HUD Trackers. Upload this next to mod.ini and the files folder.
-version=1.7
-68a1f8a8ba9c64de453edb811d604c18d0659ec2|mod.ini
-7839f43ab72d0a0906ac6acbc77032b9cc518243|files/Data/ui/themes/rose/game/hud.html
+version=2.0
+2887ba0f8dc1fb79f4a908ad7e6467c44502f742|mod.ini
+956787f8671ca00aac23860693ba207e830e77d1|files/Data/ui/sp_addons/exp_tracker.txt
+d4475326a6f99d0b8f0d3a536e444d9bfee36db0|files/Data/ui/sp_addons/weapon_refresh.txt
+cb99727bb0777fbc6c459dbd6e1b9f374bd74a1b|files/Data/ui/themes/rose/game/hud.html
+6fedb34cabee5e5dda0c2652adf7056e8d331d6d|files/Data/ui/themes/rose/game/options_bgfx.html

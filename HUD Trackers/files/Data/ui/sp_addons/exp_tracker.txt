@@ -1,0 +1,2 @@
+exp_tracker
+; Marks the EXP Tracker add-on as installed. Removed again with the add-on.

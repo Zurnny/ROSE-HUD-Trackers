@@ -1,2 +1,0 @@
-weapon_refresh
-; Marks the Weapon Refresh add-on as installed. Removed again with the add-on.

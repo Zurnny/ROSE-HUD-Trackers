@@ -1,8 +1,8 @@
 # HUD Trackers
 
-EXP Tracker and Weapon Refresh together.
+EXP Tracker and HUD Weapon Slot together.
 
-EXP Tracker and Weapon Refresh in one: they are also available as separate add-ons. Use either this one or the separate ones (having both is fine too: the files are the same).
+EXP Tracker and HUD Weapon Slot (with its durability kept up to date) in one: they are also available as separate add-ons. Use either this one or the separate ones (having both is fine too: the files are the same).
 
 An add-on for [ROSE Mod Launcher](https://github.com/Zurnny/Rose_Mod_Launcher), for the game's default UI and the Steampunk UI theme. Without the launcher, copy the `Data` folder from `files` into your ROSE Online folder.
 
